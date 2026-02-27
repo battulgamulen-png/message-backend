@@ -4,10 +4,16 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@ably/chat": "^1.2.0",
+    "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
-    "@supabase/ssr": "^0.8.0"
+    "@supabase/ssr": "^0.8.0",
+    "ably": "^2.18.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/node": "^25.3.2",
+    "dotenv": "^17.3.1",
     "prisma": "^7.4.1"
   }
 }
