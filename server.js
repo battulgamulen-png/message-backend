@@ -180,7 +180,7 @@ function sendJson(res, status, payload) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   });
   res.end(JSON.stringify(payload));
 }
@@ -429,6 +429,29 @@ async function handleCreateMessage(req, res) {
   sendJson(res, 201, { message });
 }
 
+async function handleDeleteMessages(req, res) {
+  const payload = getAuthPayload(req);
+  if (!payload?.sub) {
+    sendJson(res, 401, { message: "Нэвтрэлт шаардлагатай." });
+    return;
+  }
+
+  await prisma.message.deleteMany({
+    where: { userId: payload.sub },
+  });
+
+  if (ablyRest) {
+    try {
+      const channel = ablyRest.channels.get(getAblyChannelName(payload.sub));
+      await channel.publish("chat.cleared", { userId: payload.sub });
+    } catch (error) {
+      console.error("Ably publish failed:", error);
+    }
+  }
+
+  sendJson(res, 200, { ok: true });
+}
+
 async function handleAblyToken(req, res) {
   const payload = getAuthPayload(req);
   if (!payload?.sub) {
@@ -492,6 +515,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/chats/messages") {
       await handleCreateMessage(req, res);
+      return;
+    }
+
+    if (req.method === "DELETE" && req.url === "/chats/messages") {
+      await handleDeleteMessages(req, res);
       return;
     }
 
